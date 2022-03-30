@@ -16,3 +16,9 @@ mongodb://localhost:27017/entriesdb
 ## Config env variables
 
 Rename file `.env.example` to `.env` and fill in the env variables
+
+### Fill database with data
+
+```
+http://localhost:3000/api/seed
+```
