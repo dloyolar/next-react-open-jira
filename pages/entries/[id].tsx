@@ -22,6 +22,7 @@ import { EntryStatus, Entry } from '../../interfaces';
 import { IconButton } from '@mui/material';
 import { dbEntries } from '../../database';
 import { EntriesContext } from '../../context/entries/EntriesContext';
+import { dateFunctions } from '../../utils';
 
 const validStatus: EntryStatus[] = ['pending', 'in-progress', 'finished'];
 
@@ -66,7 +67,9 @@ export const EntryPage: FC<Props> = ({ entry }) => {
           <Card>
             <CardHeader
               title={`Entry:`}
-              subheader={`Create at ${entry.createdAt} ago`}
+              subheader={`Create ${dateFunctions.getFormatDistanceToNow(
+                entry.createdAt
+              )}`}
             />
             <CardContent>
               <TextField
