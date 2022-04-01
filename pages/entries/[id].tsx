@@ -1,4 +1,5 @@
-import { useState, ChangeEvent, useMemo } from 'react';
+import { GetServerSideProps } from 'next';
+import { useState, ChangeEvent, useMemo, FC, useContext } from 'react';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import {
@@ -17,14 +18,22 @@ import {
   Radio,
 } from '@mui/material';
 import { Layout } from '../../components/layouts';
-import { EntryStatus } from '../../interfaces/entry';
+import { EntryStatus, Entry } from '../../interfaces';
 import { IconButton } from '@mui/material';
+import { dbEntries } from '../../database';
+import { EntriesContext } from '../../context/entries/EntriesContext';
 
 const validStatus: EntryStatus[] = ['pending', 'in-progress', 'finished'];
 
-export const EntryPage = () => {
-  const [inputValue, setInputValue] = useState('');
-  const [status, setStatus] = useState<EntryStatus>('pending');
+interface Props {
+  entry: Entry;
+}
+
+export const EntryPage: FC<Props> = ({ entry }) => {
+  const { updateEntry } = useContext(EntriesContext);
+
+  const [inputValue, setInputValue] = useState(entry.description);
+  const [status, setStatus] = useState<EntryStatus>(entry.status);
   const [touched, setTouched] = useState(false);
 
   const isNotValid = useMemo(
@@ -41,17 +50,23 @@ export const EntryPage = () => {
   };
 
   const onSave = () => {
-    console.log({ inputValue, status });
+    if (inputValue.trim().length === 0) return;
+    const updatedEntry: Entry = {
+      ...entry,
+      status,
+      description: inputValue,
+    };
+    updateEntry(updatedEntry, true);
   };
 
   return (
-    <Layout>
+    <Layout title={inputValue.substring(0, 20) + '...'}>
       <Grid container justifyContent="center" sx={{ marginTop: 2 }}>
         <Grid item xs={12} sm={8} md={6}>
           <Card>
             <CardHeader
-              title={`Entry ${inputValue}`}
-              subheader={'Create 4mins ago'}
+              title={`Entry:`}
+              subheader={`Create at ${entry.createdAt} ago`}
             />
             <CardContent>
               <TextField
@@ -107,6 +122,27 @@ export const EntryPage = () => {
       </IconButton>
     </Layout>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const { id } = params as { id: string };
+
+  const entry = await dbEntries.getEntryById(id);
+
+  if (!entry) {
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    props: {
+      entry,
+    },
+  };
 };
 
 export default EntryPage;
